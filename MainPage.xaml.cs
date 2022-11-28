@@ -1,5 +1,6 @@
-﻿using ImiknWifiNavigationApp.IWNA.Database.Services;
+﻿using ImiknWifiNavigationApp.IWNA.EF.Services;
 using ImiknWifiNavigationApp.IWNA.Misc;
+using ImiknWifiNavigationApp.IWNA.ML;
 
 namespace ImiknWifiNavigationApp;
 
@@ -12,18 +13,12 @@ public partial class MainPage : ContentPage
         _provider = provider;
         InitializeComponent();
         LoadFloors();
-        ReadCsvAndMigrateToDatabase();
-    }
 
 
-    private void ReadCsvAndMigrateToDatabase()
-    {
-        // TODO move file path and csv files
-        var fingerprints = CsvUtility.GetNetworkFingerprintsFromFolder(@"D:\sleeptik\Downloads\wifi\wifi\csv\kindle");
-        var networkService = _provider.GetService<INetworkService>();
-        var locationService = _provider.GetService<ILocationService>();
-
-        MigrationUtility.NetworkFingerprintsToDatabase(fingerprints, networkService, locationService);
+#if ANDROID
+        if (!ResourceTransferUtility.IsDatabaseCopied())
+            ResourceTransferUtility.CopyDatabaseToWritableDirectory();
+#endif
     }
 
     private void LoadFloors()
@@ -44,17 +39,36 @@ public partial class MainPage : ContentPage
         mapImage.Source = ImageSource.FromStream(() => stream);
     }
 
-    private void floorsPicker_SelectedIndexChanged(object sender, EventArgs e)
+    private async void OnButtonClicked(object sender, EventArgs e)
     {
-        if (sender is Picker picker)
-            mapImage.Source = ((MapInfo)picker.SelectedItem).FullPath;
+#if ANDROID
+        if (!await PermissionUtility.RequestWifiScanningPermissions())
+            return;
+#endif
+
+        var apService = _provider.GetService<IApService>();
+        var locationService = _provider.GetService<ILocationService>();
+
+        var locationsForInputs = apService!.GetAllApLocations()
+            .Where(location => location.LocationId is 4 or 5);
+
+        var inputs = locationsForInputs
+            .Select(location => new SimpleInput
+            {
+                LocationId = location.LocationId,
+                SignalStrength = location.SignalStrength
+            }).ToList();
+
+        var predictions = EasyPredictor.PredictLocationsWeighted(inputs);
+        predictions.ForEach(output => output.LinkLocationUsingService(locationService));
+
+        var x = 0.0;
+        var y = 0.0;
+
+        foreach (var prediction in predictions)
+        {
+            x += prediction.LinkedLocation.PosX * prediction.Probability;
+            y += prediction.LinkedLocation.PosY * prediction.Probability;
+        }
     }
-}
-
-public class MapInfo
-{
-    public string Name { get; set; }
-    public string FullPath { get; set; }
-
-    public override string ToString() => Name;
 }

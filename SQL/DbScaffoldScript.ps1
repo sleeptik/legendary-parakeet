@@ -1,0 +1,1 @@
+dotnet ef dbcontext scaffold "Data Source=iwna.sqlite3" Microsoft.EntityFrameworkCore.Sqlite -c IwnaContext -o IWNA\EF\Models

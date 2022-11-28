@@ -1,21 +1,20 @@
-﻿// ReSharper disable RedundantNameQualifier
-
-using ImiknWifiNavigationApp.IWNA.Database.Models;
-using ImiknWifiNavigationApp.IWNA.Database.Services;
-using Location = ImiknWifiNavigationApp.IWNA.Database.Models.Location;
+﻿using ImiknWifiNavigationApp.IWNA.EF.Models;
+using ImiknWifiNavigationApp.IWNA.EF.Services;
+using ImiknWifiNavigationApp.IWNA.Misc.Models;
+using Location = ImiknWifiNavigationApp.IWNA.EF.Models.Location;
 
 namespace ImiknWifiNavigationApp.IWNA.Misc;
 
 public static class MigrationUtility
 {
-    public static void NetworkFingerprintsToDatabase(
+    public static void AddNetworkFingerprintsToDatabase(
         List<NetworkFingerprint> fingerprints,
-        INetworkService networkService,
+        IApService apService,
         ILocationService locationService)
     {
         foreach (var fingerprint in fingerprints)
         {
-            var network = networkService.AddNetwork(new ImiknWifiNavigationApp.IWNA.Database.Models.Network
+            var accessPoint = apService.AddAccessPoint(new AccessPoint
             {
                 Bssid = fingerprint.Bssid,
                 Ssid = fingerprint.Ssid
@@ -28,10 +27,12 @@ public static class MigrationUtility
                 Floor = fingerprint.Floor
             });
 
-            networkService.AddNetworkToLocation(new NetworkLocation
+            apService.AddNetworkToLocation(new ApLocation
             {
-                Network = network,
+                AccessPoint = accessPoint,
                 Location = location,
+                AccessPointId = accessPoint.AccessPointId,
+                LocationId = location.LocationId,
                 SignalStrength = fingerprint.SignalStrength
             });
         }

@@ -1,5 +1,6 @@
-﻿using ImiknWifiNavigationApp.IWNA.Database.Models;
-using ImiknWifiNavigationApp.IWNA.Database.Services;
+﻿using ImiknWifiNavigationApp.IWNA.EF.Models;
+using ImiknWifiNavigationApp.IWNA.EF.Services;
+using ImiknWifiNavigationApp.IWNA.Misc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,17 +20,23 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // TODO move DataSource to a resource.resx or appsettings.json
-        var connectionString = new SqliteConnectionStringBuilder { DataSource = @"D:\iwna.db" }.ConnectionString;
-        
+
+#if ANDROID
         builder.Services
-            .AddDbContext<IwnaContext>(optionsBuilder => optionsBuilder.UseSqlite(connectionString));
+            .AddDbContext<IwnaContext>(optionsBuilder => optionsBuilder.UseSqlite(new SqliteConnectionStringBuilder()
+            {
+                DataSource = ResourceTransferUtility.ExtDatabasePath
+            }.ConnectionString));
+#else
+        builder.Services
+            .AddDbContext<IwnaContext>();
+#endif
 
         builder.Services
-            .AddTransient<ILocationService, LocationService>()
-            .AddTransient<INetworkService, NetworkService>()
-            .AddTransient<MainPage>();
-        
+            .AddSingleton<MainPage>()
+            .AddTransient<IApService, ApService>()
+            .AddTransient<ILocationService, LocationService>();
+
         return builder.Build();
     }
 }

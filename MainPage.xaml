@@ -16,7 +16,10 @@
             HorizontalOptions="Center">
             <Picker
                 x:Name="floorsPicker"
-                SelectedIndexChanged="floorsPicker_SelectedIndexChanged" />
+           />
+            <Button Text="Button"
+                    Clicked="OnButtonClicked"
+                ></Button>
             <Label x:Name="mapInfo"
                    VerticalTextAlignment="Center"
                    HorizontalTextAlignment="Center">

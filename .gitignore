@@ -378,3 +378,6 @@ local.properties
 
 # Directory Build overrides for local setups
 Directory.Build.Override.props
+
+# LocalDb
+iwna.sqlite3

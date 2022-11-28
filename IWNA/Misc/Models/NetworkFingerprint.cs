@@ -2,7 +2,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace ImiknWifiNavigationApp.IWNA.Misc;
+namespace ImiknWifiNavigationApp.IWNA.Misc.Models;
 
 public class NetworkFingerprint
 {
